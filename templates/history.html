@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    history
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>Query</th>
+                <th>time</th>
+            </tr>
+        </thread>
+
+        <tbody>
+            {% for i in range(0, len) %}
+            <tr>
+                <td>{{ rows[i]["query"] }}</td>
+                <td>{{ rows[i]["time"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

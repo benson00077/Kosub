@@ -1,0 +1,261 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log In
+{% endblock %}
+
+{% block main %}
+    <div>
+        <h1> Noun </h1>
+
+        <form action="/noun" method="post">
+            <input autocomplete="off" autofocs class="form-control" name="query" placeholder="eg.도깨비" type="text">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+
+        {% if match_ko %}
+            <div class="container" style="padding-bottom:3%; padding-top:3%">
+                <div style="padding-right: 3%">
+                    <button id='btn-highlight' class='btn btn-outline-primary'> Hightlight</button>
+                    <button id='btn-highlight-clear' class='btn btn-outline-secondary'> Clear </button>
+                </div>
+                <div>
+                    <button id='btn_en' class='btn btn-secondary'>English</button>
+                    <button id='btn_zh' class='btn btn-secondary'>Chinese</button>
+                </div>
+            </div>
+
+            {% for i in range(len) %}
+            <div class="container">
+
+                <div class="item form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value={{ match_id[i] }}>
+                </div>
+
+                <div class="item" id="item1">
+                    <p id="output_ko" style="text-align:left"> {{ i+1 }}. {{ match_ko[i] }} </p>
+                </div>
+
+                {% if match_en[i] != '' %}
+                <div class="item" id="item2">
+                    <p id="output_en" style="text-align:left"> {{ i+1 }}. {{ match_en[i] }} </p>
+                </div>
+                {% else %}
+                <div>
+                    <p id="output-en" style="text-align:left"> {{ match_en[i] }} </p>
+                </div>
+                {% endif %}
+
+                {% if match_zh[i] != '' %}
+                <div class="item" id="item3">
+                    <p id="output_zh" style="text-align:left"> {{ i+1 }}. {{ match_zh[i] }} </p>
+                </div>
+                {% else %}
+                <div class="item" id="item3">
+                    <p id="output_en" style="text-align:left"> {{ match_zh[i] }} </p>
+                </div>
+                {% endif %}
+
+            </div>
+            {% endfor %}
+
+            <div id="gotop"> ^ </div>
+
+            <div>
+                <form action="/predicative" method="post" >
+                    <input id='query_text' type='checkbox' value='N/A' name='query' style='display: none' checked>
+                    <input id='input_sentence_book' type="checkbox" value='N/A' name='sentence_book' style='display: none' checked>
+                    <button id='btn_sentence_book' type="submit" class='btn btn-info'> Add to SentenceBook</button>
+                </form>
+            </div>
+
+        {% elif match_ko == [] %}
+            <div class="container">
+                <div class="item" id="item1">
+                    <p> Query: {{query}} no result!</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+{% endblock %}
+
+
+
+{% block scripts %}
+  <script>
+
+  <!-- LAYOUT: show or hide three languages -->
+      let output_ko = document.querySelectorAll('#output_ko');
+
+      let output_en_div = document.querySelectorAll('#item2');
+      let output_zh_div = document.querySelectorAll('#item3');
+
+      let btn_en = document.querySelector('#btn_en');
+      let btn_zh = document.querySelector('#btn_zh');
+
+      btn_en.onclick = function() {
+        for (i = 0; i < output_ko.length; i++) {
+            if (output_en_div[i].style.display === "none") {
+                output_en_div[i].style.display = "block";
+              } else {
+                output_en_div[i].style.display = "none";
+              }
+          }
+      }
+
+      btn_zh.onclick = function() {
+        for (i = 0; i < output_ko.length; i++) {
+              if (output_zh_div[i].style.display === "none") {
+                  output_zh_div[i].style.display = "block";
+              } else {
+                  output_zh_div[i].style.display = "none";
+              }
+        }
+      }
+
+
+
+  <!-- COMPONENT: highlight query korean word -->
+      let query_hl = '{{ query }}';
+      let btn_highlight = document.querySelector('#btn-highlight');
+      let btn_clear = document.querySelector('#btn-highlight-clear');
+      let ptn = new RegExp(query_hl, "i");
+
+      btn_highlight.onclick = function() {
+          for (i = 0; i < output_ko.length; i++) {
+              innerHTML = output_ko[i].innerHTML;
+              innerHTML = innerHTML.replace(ptn, "<span class='highlight'>" + query_hl + "</span>");
+              output_ko[i].innerHTML = innerHTML;
+          }
+      }
+
+      btn_clear.onclick = function() {
+          let ele = document.querySelectorAll('span.highlight');
+          if(ele){
+              for (i = 0; i < ele.length; i++) {
+                  ele[i].style.backgroundColor = 'transparent';
+              }
+          }
+      }
+
+    <!-- COMPONENT: gotop button -->
+      let gotop = document.querySelector('#gotop');
+
+      window.onscroll = function() {
+          if (document.body.scrollTop > 500 ||
+              document.documentElement.scrollTop > 500) {
+                  gotop.style.display = "block";
+              } else {
+                  gotop.style.display = "none";
+              }
+      }
+
+      gotop.onclick = function() {
+          document.body.scrollTop = 0; // For Safari
+          document.documentElement.scrollTop = 0; // For Chrome, Firefox. IE and Opera
+      }
+
+
+    <!-- COMPONENT: checkbox & add to sentence book-->
+    <!-- 待改善： 怎傳 list 給 flask? 暫用 string...-->
+    <!-- Dangerous ： input defalut length: 20 or sth-->
+
+      let checkboxes = document.querySelectorAll('#inlineCheckbox1');
+      let btn_sentence_book = document.querySelector('#btn_sentence_book');
+      let checked_list = '';
+
+      btn_sentence_book.onclick = function() {
+          for (i = 0; i < checkboxes.length; i++) {
+              if (checkboxes[i].checked == true) {
+                  if (checked_list == '') {
+                      checked_list += checkboxes[i].value;
+                  } else {
+                      checked_list += ',' + checkboxes[i].value;
+                  }
+              }
+          }
+          let input_sentence_book = document.querySelector('#input_sentence_book');
+          input_sentence_book.value = checked_list;
+      }
+
+    <!-- COMPONENT: put query requested into form value-->
+    <!-- served as data-backup, accessed when added to sentencebook -->
+      let query = '{{ query }}';
+      let query_text = document.querySelector('#query_text');
+
+      window.onload = function() {
+          query_text.value = query;
+      }
+
+
+  </script>
+
+  <style>
+      .highlight {
+          background-color: orange;
+        }
+
+      .container {
+          width: auto;
+          display: flex;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: center;
+      }
+
+      .item {
+          width: auto;
+          margin-left: 2%;
+      }
+
+      #item1 {
+          flex: 3 1 28%;
+      }
+
+      #item2 {
+          flex: 3 6 28%;
+      }
+
+      #item3 {
+          flex: 3 6 28%;
+      }
+
+      @media all and (max-width: 640px)
+      {
+          .container {
+              flex-direction: column;
+              margin-bottom: 10%;
+          }
+
+          #inlineCheckbox1 {
+              left: 0;
+          }
+      }
+
+      @media all and (min-width: 640px)
+      {
+          #inlineCheckbox1 {
+              left: 0;
+          }
+      }
+
+      #gotop {
+          display: none;
+          position: fixed;
+          right: 20px;
+          bottom: 20px;
+          padding: 15px 15px;
+          border-radius: 10px;
+          font-size: 18px;
+          background: #777;
+          color: white;
+          cursor: n-resize;
+      }
+
+      #gotop:hover {
+          background-color: #555;
+      }
+
+  </style>
+{% endblock scripts %}

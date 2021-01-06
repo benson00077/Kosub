@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    SentenceBook
+{% endblock %}
+
+{% block main %}
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>Query</th>
+                <th>Korean</th>
+                <th>Englihs</th>
+                <th>Chinese</th>
+                <th>time</th>
+            </tr>
+        </thread>
+
+        <tbody>
+            {% for i in range(0, len) %}
+            <tr>
+                <td>{{ rows[i]["query"] }}</td>
+                <td>{{ match_ko[i] }}</td>
+                <td>{{ match_en[i] }}</td>
+                <td>{{ match_zh[i] }}</td>
+                <td>{{ rows[i]["time"] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
