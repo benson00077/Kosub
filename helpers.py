@@ -37,37 +37,6 @@ def login_required(f):
     return decorated_function
 
 
-def lookup(symbol):
-
-
-    """Look up quote for symbol."""
-
-    # Contact API
-    try:
-        api_key = os.environ.get("API_KEY")
-        response = requests.get(f"https://cloud-sse.iexapis.com/stable/stock/{urllib.parse.quote_plus(symbol)}/quote?token={api_key}")
-        response.raise_for_status()
-    except requests.RequestException:
-        return None
-
-    # Parse response
-    try:
-        quote = response.json()
-        return {
-            "name": quote["companyName"],
-            "price": float(quote["latestPrice"]),
-            "symbol": quote["symbol"]
-        }
-    except (KeyError, TypeError, ValueError):
-        return None
-
-
-def usd(value):
-    """Format value as USD."""
-    return f"${value:,.2f}"
-
-
-
 # from r"['[타이어 마찰음]\n', '오직 도깨비 신부만이\n', '\n']"
 # to [타이어 마찰음], 오직 도깨비 신부만
 
