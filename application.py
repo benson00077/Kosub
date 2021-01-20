@@ -1,4 +1,3 @@
-from cs50 import SQL
 from flask import Flask, flash, jsonify, redirect, render_template, request, session
 from flask_session import Session
 from tempfile import mkdtemp
@@ -6,11 +5,10 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import apology, login_required, lookup, usd
+from helpers import prettify
 
 from time import gmtime, strftime
-import ast
-import re
-from helpers import prettify
+import ast, re, sqlite3
 
 # Configure application
 app = Flask(__name__)
@@ -35,8 +33,9 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///subtitles_cs50.db")
+# db init 
+conn = sqlite3.connect('/subtitles_cs50.db')
+db = conn.cursor()
 
 # ------------------------------------------------
 
@@ -57,7 +56,7 @@ def index():
 
             for i in range(0, len(rows)):                    # eg. rows[i]['tag'] is a stirng, could be   "[['SS'], ['XPN', 'NNG'], ['NNG', 'SS']]"
                 tag_list = ast.literal_eval(rows[i]['tag'])  # eg. from string representation of a list to list: ['SS'], ['XPN', 'NNG'], ['NNG', 'SS']
-                #if query.split() in tag_list:               # BUGGGGGG: 只會擷取有單獨存在的query : ['NNG'] 而不會有['XPN', ['NNG']，解法見下
+                #if query.split() in tag_list:               # BUG: 只會擷取有單獨存在的query : ['NNG'] 而不會有['XPN', ['NNG']，解法見下
                 for j in tag_list:
                     if query in j:                           # eg. if "SS" in ['SS'] ? if in  ['XPN', 'NNG']? if in  ['NNG', 'SS'] ?
                         match.append(rows[i]['sentence'])
@@ -105,6 +104,7 @@ def predicative():
                                  sentence_id = i,
                                  time=time,
                                  query=query)
+            conn.commit()
 
         return render_template("predicative.html")
 
@@ -138,6 +138,7 @@ def predicative():
                              id = session["user_id"],
                              query = query,
                              time=time)
+        conn.commit()
 
         # READ koPos table
         if stem:
@@ -153,6 +154,10 @@ def predicative():
 
             flash("query | " + query)
             #flash("| stem | " + stem + " | ")
+
+            # close db
+            if conn:
+                conn.close()
 
             for i in range(0, len(rows2)):                          # eg. rows2[i]['pos'] is a stirng, could be   "[['도깨비/NNG', '가/JKC'], ['되/VV', 'ㄴ단다/EFN']]"
                 pos_list = ast.literal_eval(rows2[i]['pos'])        # eg. from string representation of a list to list: [['도깨비/NNG', '가/JKC'], ['되/VV', 'ㄴ단다/EFN']]
@@ -223,6 +228,7 @@ def noun():
                                  sentence_id = i,
                                  time=time,
                                  query=query)
+            conn.commit()
 
         return render_template("noun.html")
 
@@ -237,16 +243,14 @@ def noun():
         match_zh = []
         match_id = []
 
-        """
         # UPDATE history table
         rows = db.execute('''INSERT INTO history (id,query,time)
                              VALUES (:id, :query, :time)''',
                              id = session["user_id"],
                              query = query,
                              time=time)
-        """
-
-
+        conn.commit()
+        
         # READ koPos table
         rows2 = db.execute('''SELECT koPos.id, tag, morphs,
                                      koSentence.sentence AS stn_ko,
@@ -259,6 +263,11 @@ def noun():
 
         flash("query | " + query + " | ")
 
+        # close db
+        if conn:
+            conn.close()
+
+        # Access query result 
         for i in range(0, len(rows2)):
                 morphs_list = ast.literal_eval(rows2[i]['morphs'])  # eg. from string to list: ['SS'] | ['XPN', 'NNG'] | ['NNG', 'SS']
                 for j in morphs_list:

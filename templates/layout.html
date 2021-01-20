@@ -25,7 +25,7 @@
     </head>
 
     <body>
-
+      <div>
         <nav class="navbar navbar-expand-md navbar-light bg-light border">
             <a class="navbar-brand" href="/"><span><img src="/static/favicon.ico"></span><span class="blue"> Goblin query </span></a>
             <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbar" data-toggle="collapse" type="button">
@@ -61,6 +61,12 @@
             </header>
         {% endif %}
 
+        {% block app_content %}
+        <div id="react-root"></div>
+        
+        <script src="{{ url_for('static', filename='dist/bundle.js') }}"></script>
+        {% endblock %}
+
         <main class="container p-5">
             {% block main %}{% endblock %}
             {% block scripts %}{% endblock %}
@@ -69,7 +75,7 @@
         <footer class="small text-center text-muted">
             CS50 <a href="https://cs50.harvard.edu/x/2020/project/"> final project</a>.
         </footer>
-
+      </div>
     </body>
 
 </html>

@@ -1,3 +1,7 @@
+# In terminal:
+# export FLASK_APP=application.py
+
+
 cs50
 Flask
 Flask-Session
